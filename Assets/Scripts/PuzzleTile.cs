@@ -1,22 +1,15 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class PuzzleTile : MonoBehaviour
 {
-    public Text NumberText;
+    public TextMeshProUGUI NumberText;
 
-    private PuzzleManager PuzzleManager { get; set; }
     public Vector2Int CurrectPosition { get; set; }
-    private int Number { get; set; }
-
-    private void Awake()
-    {
-        PuzzleManager = FindObjectOfType<PuzzleManager>();
-    }
 
     public void SetNumber(int value)
     {
-        Number = value;
         NumberText.text = value.ToString();
     }
 

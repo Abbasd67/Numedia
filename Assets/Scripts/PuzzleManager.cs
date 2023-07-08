@@ -1,16 +1,17 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using TMPro;
 
 public class PuzzleManager : MonoBehaviour
 {
     public GameObject PuzzleTilePrefab;
     public Vector2Int PuzzleSize;
     public Transform PuzzleContainer;
-    public Text MoveCountText { get; set; }
+    public TextMeshProUGUI MoveCountText;
 
     private PuzzleTile[][] PuzzleTiles { get; set; }
-    private Vector2Int emptyTilePosition { get; set; }
+    private Vector2Int EmptyTilePosition { get; set; }
     private int MoveCount { get; set; }
 
     private void Start()
@@ -29,7 +30,7 @@ public class PuzzleManager : MonoBehaviour
             PuzzleTiles[i] = new PuzzleTile[(int)PuzzleSize.y];
             for (int j = 0; j < PuzzleSize.y; j++)
             {
-                if (i != PuzzleSize.x || j != PuzzleSize.y)
+                if (i != PuzzleSize.x - 1 || j != PuzzleSize.y - 1)
                 {
                     GameObject tileObject = Instantiate(PuzzleTilePrefab, PuzzleContainer);
                     PuzzleTile puzzleTile = tileObject.GetComponent<PuzzleTile>();
@@ -40,7 +41,7 @@ public class PuzzleManager : MonoBehaviour
                 }
                 else
                 {
-                    emptyTilePosition = new Vector2Int(i, j);
+                    EmptyTilePosition = new Vector2Int(i, j);
                 }
             }
         }
@@ -64,14 +65,15 @@ public class PuzzleManager : MonoBehaviour
         if (tileAx == tileBx && tileAy == tileBy)
             return;
 
-        PuzzleTile tempTile = PuzzleTiles[tileAx][tileAy];
-        PuzzleTiles[tileAx][tileAy] = PuzzleTiles[tileBx][tileBy];
-        PuzzleTiles[tileBx][tileBy] = tempTile;
-
+        (PuzzleTiles[tileBx][tileBy], PuzzleTiles[tileAx][tileAy]) = (PuzzleTiles[tileAx][tileAy], PuzzleTiles[tileBx][tileBy]);
         if (PuzzleTiles[tileAx][tileAy] != null)
-            PuzzleTiles[tileAx][tileAy].SetPosition(new Vector2(tileBx, tileBy));
+            PuzzleTiles[tileAx][tileAy].SetPosition(new Vector2(tileAx, tileAy));
+        else
+            EmptyTilePosition = new Vector2Int(tileAx, tileAy);
         if (PuzzleTiles[tileBx][tileBy] != null)
-            PuzzleTiles[tileBx][tileBy].SetPosition(new Vector2(tileAx, tileAy));
+            PuzzleTiles[tileBx][tileBy].SetPosition(new Vector2(tileBx, tileBy));
+        else
+            EmptyTilePosition = new Vector2Int(tileBx, tileBy);
 
     }
 
@@ -79,8 +81,12 @@ public class PuzzleManager : MonoBehaviour
     {
         for (int i = 0; i < PuzzleSize.x; i++)
             for (int j = 0; j < PuzzleSize.y; j++)
+            {
+                if (PuzzleTiles[i][j] == null)
+                    continue;
                 if (!PuzzleTiles[i][j].IsInCorrectPosition())
                     return false;
+            }
 
         return true;
     }
@@ -94,19 +100,19 @@ public class PuzzleManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
-            TryMoveTile(new Vector2Int(emptyTilePosition.x, emptyTilePosition.y + 1));
+            TryMoveTile(new Vector2Int(EmptyTilePosition.x, EmptyTilePosition.y + 1));
         }
         else if (Input.GetKeyDown(KeyCode.DownArrow))
         {
-            TryMoveTile(new Vector2Int(emptyTilePosition.x, emptyTilePosition.y - 1));
+            TryMoveTile(new Vector2Int(EmptyTilePosition.x, EmptyTilePosition.y - 1));
         }
         else if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            TryMoveTile(new Vector2Int(emptyTilePosition.x - 1, emptyTilePosition.y));
+            TryMoveTile(new Vector2Int(EmptyTilePosition.x - 1, EmptyTilePosition.y));
         }
         else if (Input.GetKeyDown(KeyCode.RightArrow))
         {
-            TryMoveTile(new Vector2Int(emptyTilePosition.x + 1, emptyTilePosition.y));
+            TryMoveTile(new Vector2Int(EmptyTilePosition.x + 1, EmptyTilePosition.y));
         }
     }
 
@@ -115,8 +121,7 @@ public class PuzzleManager : MonoBehaviour
         if (tilePosition.x < 0 || tilePosition.y < 0 || tilePosition.x >= PuzzleSize.x || tilePosition.y >= PuzzleSize.y)
             return;
 
-        SwapTiles(tilePosition.x, tilePosition.y, emptyTilePosition.x, emptyTilePosition.y);
-        emptyTilePosition = tilePosition;
+        SwapTiles(tilePosition.x, tilePosition.y, EmptyTilePosition.x, EmptyTilePosition.y);
         MoveCount++;
         UpdateMoveCountText();
 
